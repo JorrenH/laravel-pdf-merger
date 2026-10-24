@@ -1,11 +1,10 @@
 # Laravel PDF Merger
 
-PDF merger for Laravel inspired by another package, created for personal use. Tested with Laravel 5.6.
+PDF merger for Laravel inspired by another package, created for personal use. Tested with Laravel 13 on PHP 8.5.
 
 ## Advantages
-* Also works with PDF versions above `1.4`
-* Works with `PHP 7`
-* Added configuration for `temp` folder and `gs` binary
+* Works with PDF versions above `1.4`
+* Supports `Laravel 9+` on `PHP 8.0+`
 
 ## Installation
 ```bash
@@ -13,7 +12,11 @@ PDF merger for Laravel inspired by another package, created for personal use. Te
 ```
 
 ## Configuration
-Make the following changes to the main configuration file located at `config/app.php`
+
+### Auto-discovery (Laravel 9+)
+The service provider and facade are registered automatically through package auto-discovery on supported Laravel versions; no changes to `config/app.php` are needed.
+
+If you disabled auto-discovery, register manually in `config/app.php`:
 ```php
 'providers' => [
    ...

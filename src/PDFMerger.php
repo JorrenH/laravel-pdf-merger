@@ -4,6 +4,7 @@ namespace JorrenH\LaravelPDFMerger;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use setasign\Fpdi\Fpdi;
 
 class PDFMerger
@@ -136,7 +137,7 @@ class PDFMerger
      */
     public function addString($string, $pages = 'all', $orientation = null)
     {
-        $filePath = $this->getTemporaryDirectory(str_random(16) . '.pdf');
+        $filePath = $this->getTemporaryDirectory(Str::random(16) . '.pdf');
         $this->filesystem->put($filePath, $string);
         $this->tmpFiles->push($filePath);
         return $this->addPDF($filePath, $pages, $orientation);
@@ -243,7 +244,7 @@ class PDFMerger
         preg_match_all('!\d+!', $first_line, $matches);
         $pdfversion = implode('.', $matches[0]);
         if ($pdfversion > "1.4" && config('pdfmerger.compatibility.enabled', true)) {
-            $newFilePath = $this->getTemporaryDirectory(str_random(16) . '.pdf');
+            $newFilePath = $this->getTemporaryDirectory(Str::random(16) . '.pdf');
             $gs = config('pdfmerger.compatibility.binary', env('GS_BINARY', '/usr/local/bin/gs'));
             //execute shell script that converts PDF to correct version and saves it to tmp folder
             shell_exec("$gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=\"$newFilePath\" \"$filePath\"");
