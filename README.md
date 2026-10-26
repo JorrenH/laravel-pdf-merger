@@ -29,8 +29,8 @@ If you disabled auto-discovery, register manually in `config/app.php`:
 ]
 ```
 
-> When merging PDFs versions above 1.4 or PDF strings, a temporary PDF will be created during the process and stored in the configured `temp` directory, which is created if it does not exist.
-> Also, note that this package requires Ghostscript installed on the server and configured in the config in order to function properly with PDF versions 1.5+. [Install Guide](https://www.ghostscript.com/doc/9.20/Install.htm)
+> When merging PDFs versions above 1.4 (or PDFs using a compressed cross-reference stream / object streams, even if their header says 1.4), a temporary PDF will be created during the process and stored in the configured `temp` directory, which is created if it does not exist.
+> Also, note that this package requires Ghostscript installed on the server and configured in the config in order to function properly with these PDFs. [Install Guide](https://www.ghostscript.com/doc/9.20/Install.htm) The conversion runs with `-dCompatibilityLevel=1.4`, since Ghostscript 10.03+ writes XRef/ObjStm streams by default, which the free FPDI parser cannot handle.
 
 > Note: Windows users should configure the gswinXXc.exe binary which is the commandline version of the program.
 

@@ -237,17 +237,30 @@ class PDFMerger
      */
     protected function convertPDFVersion($filePath)
     {
-        $pdf = fopen($filePath, "r");
-        $first_line = fgets($pdf);
-        fclose($pdf);
-        //extract version number
-        preg_match_all('!\d+!', $first_line, $matches);
-        $pdfversion = implode('.', $matches[0]);
-        if ($pdfversion > "1.4" && config('pdfmerger.compatibility.enabled', true)) {
+        $handle = fopen($filePath, 'rb');
+        if ($handle === false) {
+            throw new \RuntimeException("Could not open PDF '$filePath'");
+        }
+        $head = fread($handle, 1024) ?: '';
+        fseek($handle, -2048, SEEK_END);
+        $tail = fread($handle, 2048) ?: '';
+        fclose($handle);
+
+        preg_match('/%PDF-(\d\.\d)/', $head, $matches);
+        $pdfversion = $matches[1] ?? '0';
+        $hasXrefStream = (bool) preg_match('#/Type\s*/XRef\b#', $tail);
+
+        if ((version_compare($pdfversion, '1.4', '>') || $hasXrefStream) && config('pdfmerger.compatibility.enabled', true)) {
             $newFilePath = $this->getTemporaryDirectory(Str::random(16) . '.pdf');
-            $gs = config('pdfmerger.compatibility.binary', env('GS_BINARY', '/usr/local/bin/gs'));
-            //execute shell script that converts PDF to correct version and saves it to tmp folder
-            shell_exec("$gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=\"$newFilePath\" \"$filePath\"");
+            $gs = config('pdfmerger.compatibility.binary', env('GS_BINARY', '/usr/bin/gs'));
+            //rewrite the PDF to version 1.4 with a regular xref table, as required by the FPDI free parser
+            $command = "$gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dCompatibilityLevel=1.4"
+                . " -sOutputFile=" . escapeshellarg($newFilePath) . ' ' . escapeshellarg($filePath);
+            shell_exec($command);
+            //Ghostscript >=10.03 emits XRef streams by default when the compatibility level allows it, so verify the output
+            if (!is_file($newFilePath) || strpos((string) file_get_contents($newFilePath), '%PDF-') !== 0) {
+                throw new \RuntimeException("Ghostscript conversion failed for '$filePath'. Check the gs binary path (currently: $gs).");
+            }
             $this->tmpFiles->push($newFilePath);
             $filePath = $newFilePath;
         }
